@@ -56,3 +56,30 @@ def get_book(book_id: int, db: Session = Depends(get_db)):
     if not book:
         raise HTTPException(404, "Book not found")
     return book
+
+@app.get("/stats/book-count")
+def book_count(db: Session = Depends(get_db)):
+    return {"total_books": db.query(Book).count()}
+
+@app.get("/stats/average-year")
+def average_year(db: Session = Depends(get_db)):
+    years = [b.publication_year for b in db.query(Book).all() if b.publication_year]
+    if not years:
+        return {"message": "No books with publication year"}
+    return {"average_year": sum(years) / len(years)}
+
+@app.get("/stats/author-range/{author_id}")
+def author_range(author_id: int, db: Session = Depends(get_db)):
+    books = db.query(Book).filter(Book.author_id == author_id).all()
+    if not books:
+        return {"message": "No books for author"}
+    books.sort(key=lambda b: b.publication_year or 0)
+    return {
+        "earliest": books[0].title,
+        "latest": books[-1].title
+    }
+
+@app.get("/stats/author-has-books/{author_id}")
+def author_has_books(author_id: int, db: Session = Depends(get_db)):
+    exists = db.query(Book).filter(Book.author_id == author_id).first() is not None
+    return {"has_books": exists}
