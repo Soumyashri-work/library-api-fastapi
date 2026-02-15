@@ -1,6 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from auth import validate_credentials
+
+
 from database import engine, get_db
 from models import Base, Author, Book, Category
 from schemas import AuthorCreate, AuthorOut, BookCreate, BookOut, CategoryCreate, CategoryOut
@@ -83,3 +88,15 @@ def author_range(author_id: int, db: Session = Depends(get_db)):
 def author_has_books(author_id: int, db: Session = Depends(get_db)):
     exists = db.query(Book).filter(Book.author_id == author_id).first() is not None
     return {"has_books": exists}
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    user = validate_credentials(request.headers.get("Authorization"))
+    if not user:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Unauthorized"}
+        )
+
+    request.state.user = user
+    return await call_next(request)
