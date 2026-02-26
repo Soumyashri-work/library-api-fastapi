@@ -158,23 +158,6 @@ This project was built step-by-step as a learning-focused implementation, emphas
 Soumyashri Mukund Inamdar
 Assignment: FastAPI + SQLite — Hands-On
 
-📤 HOW TO ADD THIS TO GITHUB
-Create file:
 
-README.md
-Paste content
 
-Commit:
 
-git add README.md
-git commit -m "Add README documentation"
-git push
-If you want:
-
-🔐 403 role-based authorization
-
-🧠 Interview explanation
-
-📹 Demo walkthrough script
-
-Just tell me — happy to help 😊
