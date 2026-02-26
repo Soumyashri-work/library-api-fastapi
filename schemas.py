@@ -3,12 +3,12 @@ from typing import Optional
 
 class AuthorCreate(BaseModel):
     name: str
-    bio: Optional[str]
+    bio: Optional[str] = None
 
 class AuthorOut(AuthorCreate):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CategoryCreate(BaseModel):
@@ -17,17 +17,22 @@ class CategoryCreate(BaseModel):
 class CategoryOut(CategoryCreate):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BookCreate(BaseModel):
     title: str
     isbn: str
-    publication_year: Optional[int]
+    publication_year: Optional[int] = None
     author_id: int
     category_id: int
 
-class BookOut(BookCreate):
+class BookOut(BaseModel):
     id: int
+    title: str
+    isbn: str
+    publication_year: Optional[int] = None
+    author_id: Optional[int] = None      # None-safe: handles books with missing author
+    category_id: Optional[int] = None    # None-safe: handles books with missing category
     class Config:
-        orm_mode = True
+        from_attributes = True
