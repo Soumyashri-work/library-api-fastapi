@@ -215,4 +215,83 @@ def author_range(author_id: int, db: Session = Depends(get_db)):
 @app.get("/stats/author-has-books/{author_id}")
 def author_has_books(author_id: int, db: Session = Depends(get_db)):
     exists = db.query(Book).filter(Book.author_id == author_id).first() is not None
+<<<<<<< HEAD
     return {"has_books": exists}
+=======
+    return {"has_books": exists}
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    user = validate_credentials(request.headers.get("Authorization"))
+    if not user:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Unauthorized"}
+        )
+
+    request.state.user = user
+    return await call_next(request)
+
+@app.get("/books/insights")
+def books_insights(db: Session = Depends(get_db)):
+    # 1. Load all books
+    books = db.query(Book).all()
+
+    if not books:
+        return {
+            "top_authors": [],
+            "busy_years": {}
+        }
+
+    # 2. Filter valid books
+    valid_books = []
+    for book in books:
+        if (
+            book.author is not None
+            and book.publication_year is not None
+            and 1900 <= book.publication_year <= 2100
+        ):
+            valid_books.append(book)
+
+    if not valid_books:
+        return {
+            "top_authors": [],
+            "busy_years": {}
+        }
+
+    # 3. Top authors (count per author)
+    author_counts = {}
+    for book in valid_books:
+        author_name = book.author.name
+        author_counts[author_name] = author_counts.get(author_name, 0) + 1
+
+    # Sort authors by book count (descending) and take top 5
+    top_authors = sorted(
+        author_counts.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:5]
+
+    top_authors_result = [
+        {"author": name, "book_count": count}
+        for name, count in top_authors
+    ]
+
+    # 4. Busy years (years with >= 2 books)
+    year_map = {}
+    for book in valid_books:
+        year = book.publication_year
+        year_map.setdefault(year, []).append(book.title)
+
+    busy_years = {
+        year: titles
+        for year, titles in sorted(year_map.items())
+        if len(titles) >= 2
+    }
+
+    # 5. Return report
+    return {
+        "top_authors": top_authors_result,
+        "busy_years": busy_years
+    }
+>>>>>>> 14cad7c55bc534a8706c160d25e440fefed26e5e
